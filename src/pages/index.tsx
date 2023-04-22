@@ -1,9 +1,12 @@
 import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
 import { type NextPage } from "next";
 import Head from "next/head";
+import { api } from "~/utils/api";
 
 const Home: NextPage = () => {
+  const { data } = api.posts.getAll.useQuery();
   const user = useUser();
+  console.log(data);
 
   return (
     <>
@@ -16,15 +19,20 @@ const Home: NextPage = () => {
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
           <h1>Test</h1>
           {!user.isSignedIn && (
-            <h1 className="m-10 bg-white">
+            <div className="m-10 bg-white">
               <SignInButton />
-            </h1>
+            </div>
           )}
           {!!user.isSignedIn && (
-            <h1 className="m-10 bg-white p-10">
+            <div className="m-10 bg-white p-10">
               <SignOutButton />
-            </h1>
+            </div>
           )}
+          <div>
+            {data?.map((post) => (
+              <p key={post.id}>{post.content}</p>
+            ))}
+          </div>
         </div>
       </main>
     </>
