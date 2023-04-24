@@ -7,6 +7,7 @@ import type { RouterOutputs } from "~/utils/api";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import Image from "next/image";
+import { Loading } from "~/components/Loading";
 dayjs.extend(relativeTime);
 
 const CreatePostWithard = () => {
@@ -57,11 +58,27 @@ const PostView = (props: PostWithUser) => {
   );
 };
 
-const Home: NextPage = () => {
-  const { data, isLoading } = api.posts.getAll.useQuery();
-  const user = useUser();
-  if (isLoading) return <div>Loading ...</div>;
+export const Feed = () => {
+  const { data, isLoading: arePostsLoading } = api.posts.getAll.useQuery();
+
+  if (arePostsLoading) return <Loading />;
   if (!data) return <div>Data is missing</div>;
+
+  return (
+    <div>
+      {[...data, ...data]?.map(({ post, author }) => (
+        <PostView key={post.id} post={post} author={author} />
+      ))}
+    </div>
+  );
+};
+
+const Home: NextPage = () => {
+  const { isLoaded, isSignedIn } = useUser();
+  api.posts.getAll.useQuery();
+
+  if (!isLoaded) return <div />;
+
   return (
     <>
       <Head>
@@ -73,15 +90,12 @@ const Home: NextPage = () => {
         <div className="h-full w-full border-x border-gray-600 md:max-w-2xl">
           <div className="border-b border-gray-600 p-4">
             <div className="flex">
-              {!user.isSignedIn && <SignInButton />}
-              {user.isSignedIn && <CreatePostWithard />}
+              {!isSignedIn && <SignInButton />}
+              {isSignedIn && <CreatePostWithard />}
             </div>
           </div>
-          <div>
-            {[...data, ...data]?.map(({ post, author }) => (
-              <PostView key={post.id} post={post} author={author} />
-            ))}
-          </div>
+
+          <Feed />
         </div>
       </main>
     </>
